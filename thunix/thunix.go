@@ -27,12 +27,26 @@ func Init(c *ircb.Connection) error {
 }
 
 func commandShells(c *ircb.Connection, irc *ircb.IRC) {
-	dir, err := ioutil.ReadDir("/home")
+	var shells int
+	letters, err := ioutil.ReadDir("/home")
 	if err != nil {
 		c.Log.Println(err)
 		return
 	}
 
-	irc.Reply(c, fmt.Sprintf("Current number of shell accounts: %v", len(dir)))
+	for _, letter := range letters {
+		if letter.IsDir() {
+			userhomes, err := ioutil.ReadDir(letter.Name())
+			if err != nil {
+				c.Log.Println(err)
+				continue
+			}
+			shells += len(userhomes)
+		}			
+
+	}
+
+	irc.Reply(c,
+		fmt.Sprintf("Current number of shell accounts: %v", shells))
 
 }
