@@ -1,5 +1,3 @@
-// +build cgo
-
 // Skeleton plugin adds "plugin-test" public command to ircb
 package main
 
