@@ -36,7 +36,7 @@ func commandShells(c *ircb.Connection, irc *ircb.IRC) {
 
 	for _, letter := range letters {
 		if letter.IsDir() {
-			userhomes, err := ioutil.ReadDir(letter.Name())
+			userhomes, err := ioutil.ReadDir("/home/"+letter.Name())
 			if err != nil {
 				c.Log.Println(err)
 				continue
