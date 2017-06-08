@@ -57,6 +57,9 @@ func commandGo(c *ircb.Connection, irc *ircb.IRC) {
 	}
 	output = strings.TrimSuffix(strings.TrimSpace(output), "\n")
 	output = strings.Replace(output, "\n", " -- ", -1)
+	if len(output) > 491 {
+		output = output[:490]
+	}
 	irc.Reply(c, output)
 }
 
