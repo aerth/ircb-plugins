@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strings"
 
+	"golang.org/x/tools/imports"
+
 	"github.com/aerth/ircb"
 )
 
@@ -72,14 +74,49 @@ type Response struct {
 	Events []Event
 }
 
-func sendToCompiler(client *http.Client, gocode []byte) (Response, error) {
-	playground := "http://golang.org/compile"
-	if gocode == nil || len(gocode) < len(`println("æ")`) {
+func (resp Response) CombinedOutput() string {
+
+	var output string
+	for _, ev := range resp.Events {
+		if ev.Message != "" {
+			output += "  " + ev.Message
+		}
+	}
+	if resp.Errors != "" {
+		if strings.Contains(resp.Errors, "/") {
+			i := strings.Index(resp.Errors, "/")
+			resp.Errors = resp.Errors[i+1:]
+			i = strings.Index(resp.Errors, "/")
+			resp.Errors = resp.Errors[i+1:]
+			output += "  " + resp.Errors
+		}
+
+	}
+	if resp.Error != "" {
+		output += "  " + resp.Error
+
+	}
+	output = strings.TrimSuffix(strings.TrimSpace(output), "\n")
+	output = strings.Replace(output, "\n", " -- ", -1)
+	return output
+}
+
+func sendToCompiler(client *http.Client, code []byte) (Response, error) {
+	compiler := "http://golang.org/compile"
+	if code == nil || len(code) < len(`println("æ")`) {
 		return Response{}, fmt.Errorf("not enough bytes")
 	}
-	//gocode = []byte(strings.Replace(string(gocode), "\"", "\\\"", -1))
-	gocode = []byte("version=2&body=" + url.QueryEscape(string(gocode)))
-	req, err := http.NewRequest(http.MethodPost, playground, bytes.NewReader(gocode))
+
+	// run goimports on it
+	code, err := imports.Process("", code, nil)
+	if err != nil {
+		return Response{}, fmt.Errorf("imports: %v", err)
+
+	}
+	gocode := "version=2&body=" + url.QueryEscape(string(code))
+	req, err := http.NewRequest(http.MethodPost,
+		compiler,
+		bytes.NewReader([]byte(gocode)))
 	if err != nil {
 		return Response{}, fmt.Errorf("%v", err)
 	}
