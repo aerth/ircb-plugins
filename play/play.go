@@ -1,4 +1,3 @@
-// Skeleton plugin adds "plugin-test" public command to ircb
 package main
 
 import (
@@ -17,12 +16,6 @@ import (
 func main() {}
 
 // Init must be named Init taking an ircb.Connection and returning an error
-// Useful methods of ircb.Connection include:
-//  c.AddCommand(name, fn)
-//  c.AddMasterCommand(name, fn)
-//  c.RemoveCommand(name)
-//  c.RemoveMasterCommand(name)
-//  c.SendMaster(format, ...interface{})
 func Init(c *ircb.Connection) error {
 	name := "go play" // no global variables in plugin
 	c.Log.Println("plugin loading:", name)
@@ -31,7 +24,6 @@ func Init(c *ircb.Connection) error {
 	return nil
 }
 
-// commands must have the following signature
 func commandGo(c *ircb.Connection, irc *ircb.IRC) {
 	if len(irc.Arguments) < 1 {
 		return
@@ -50,13 +42,18 @@ func commandGo(c *ircb.Connection, irc *ircb.IRC) {
 	if resp.Errors != "" {
 		if strings.Contains(resp.Errors, "/") {
 			i := strings.Index(resp.Errors, "/")
-			resp.Errors = resp.Errors[i:]
+			resp.Errors = resp.Errors[i+1:]
 			i = strings.Index(resp.Errors, "/")
-			resp.Errors = resp.Errors[i:]
+			resp.Errors = resp.Errors[i+1:]
 			output += "  " + resp.Errors
 		}
 
 	}
+	if resp.Error != "" {
+		output += "  " + resp.Error
+
+	}
+	output = strings.TrimSuffix(strings.TrimSpace(output), "\n")
 	output = strings.Replace(output, "\n", " -- ", -1)
 	irc.Reply(c, output)
 }
