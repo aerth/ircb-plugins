@@ -57,6 +57,7 @@ func commandGo(c *ircb.Connection, irc *ircb.IRC) {
 		}
 
 	}
+	output = strings.Replace(output, "\n", " -- ", -1)
 	irc.Reply(c, output)
 }
 
