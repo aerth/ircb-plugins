@@ -4,6 +4,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os/exec"
+	"strings"
 
 	"github.com/aerth/ircb"
 )
@@ -19,9 +21,10 @@ func main() {}
 //  c.RemoveMasterCommand(name)
 //  c.SendMaster(format, ...interface{})
 func Init(c *ircb.Connection) error {
-	name := "thunar" // no global variables in plugin
+	name := "thunix" // no global variables in plugin
 	c.Log.Println("plugin loading:", name)
 	c.AddCommand("shells", commandShells)
+	c.AddCommand("uptime", commandHostUptime)
 	c.Log.Println("plugin loaded:", name)
 	return nil
 }
@@ -36,17 +39,33 @@ func commandShells(c *ircb.Connection, irc *ircb.IRC) {
 
 	for _, letter := range letters {
 		if letter.IsDir() {
-			userhomes, err := ioutil.ReadDir("/home/"+letter.Name())
+			userhomes, err := ioutil.ReadDir("/home/" + letter.Name())
 			if err != nil {
 				c.Log.Println(err)
 				continue
 			}
 			shells += len(userhomes)
-		}			
+		}
 
 	}
 
 	irc.Reply(c,
 		fmt.Sprintf("Current number of shell accounts: %v", shells))
 
+}
+
+func commandHostUptime(c *ircb.Connection, irc *ircb.IRC) {
+	// output of uptime command
+	uptime := exec.Command("/usr/bin/uptime")
+
+	out, err := uptime.CombinedOutput()
+	if err != nil {
+		c.Log.Println(irc, err)
+		c.SendMaster("%s", err)
+	}
+
+	output := strings.Split(string(out), "\n")[0]
+	if strings.TrimSpace(output) != "" {
+		irc.Reply(c, output)
+	}
 }
